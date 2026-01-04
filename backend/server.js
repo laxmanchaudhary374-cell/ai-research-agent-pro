@@ -11,15 +11,32 @@ const PORT = process.env.PORT || 5000;
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
-app.use(cors({
-  origin: [
+// CORS configuration - MUST come BEFORE other middleware
+app.use((req, res, next) => {
+  const allowedOrigins = [
     'http://localhost:5173',
     'https://ai-research-agent-8xly338qf-laxman-chaudharys-projects.vercel.app'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
+// Then your other middleware
+app.use(express.json({ limit: '50mb' }));
 
 // Health check
 app.get('/health', (req, res) => {
