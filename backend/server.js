@@ -11,31 +11,20 @@ const PORT = process.env.PORT || 5000;
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
-// CORS configuration - MUST come BEFORE other middleware
+// CORS configuration - MUST come FIRST
 app.use((req, res, next) => {
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'https://ai-research-agent-8xly338qf-laxman-chaudharys-projects.vercel.app'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
-  
   next();
 });
 
-// Then your other middleware
+// Body parser - MUST come AFTER CORS
 app.use(express.json({ limit: '50mb' }));
 
 // Health check
@@ -49,6 +38,9 @@ app.get('/health', (req, res) => {
 
 // Main chat endpoint
 app.post('/api/chat', async (req, res) => {
+  console.log('=== Received Request ===');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
+  
   try {
     const { messages } = req.body;
 
@@ -58,7 +50,7 @@ app.post('/api/chat', async (req, res) => {
 
     if (!API_KEY) {
       return res.status(500).json({ 
-        error: 'API key not configured. Please add OPENROUTER_API_KEY to .env file' 
+        error: 'API key not configured. Please add OPENROUTER_API_KEY to environment variables' 
       });
     }
 
@@ -71,24 +63,20 @@ app.post('/api/chat', async (req, res) => {
     // Add system message
     apiMessages.unshift({
       role: 'system',
-      content: `You are an advanced AI Research Agent. You help with:
-- Research and information gathering
-- Document analysis and summarization
-- Code generation and explanation
-- Data insights and recommendations
-
-Be helpful, thorough, and professional. Use markdown formatting when appropriate.`
+      content: 'You are an advanced AI Research Agent. You help with research, document analysis, code generation, and more. Be helpful, thorough, and professional.'
     });
 
-    // Call OpenRouter API (supports multiple FREE models!)
-const response = await axios.post(
-  OPENROUTER_API_URL,
-  {
-    model: 'meta-llama/llama-3.2-3b-instruct:free', // ← NEW FREE MODEL
-    messages: apiMessages,
-    temperature: 0.7,
-    max_tokens: 2000
-  },
+    console.log('Calling OpenRouter API...');
+
+    // Call OpenRouter API
+    const response = await axios.post(
+      OPENROUTER_API_URL,
+      {
+        model: 'google/gemini-2.0-flash-exp:free',
+        messages: apiMessages,
+        temperature: 0.7,
+        max_tokens: 2000
+      },
       {
         headers: {
           'Authorization': `Bearer ${API_KEY}`,
@@ -101,6 +89,8 @@ const response = await axios.post(
 
     const assistantMessage = response.data.choices[0].message.content;
 
+    console.log('OpenRouter Response received!');
+
     res.json({
       response: assistantMessage,
       timestamp: new Date().toISOString(),
@@ -109,11 +99,12 @@ const response = await axios.post(
     });
 
   } catch (error) {
+    console.error('=== ERROR ===');
     console.error('Error:', error.response?.data || error.message);
     
     if (error.response?.status === 401) {
       return res.status(401).json({ 
-        error: 'Invalid API key. Check your OpenRouter API key in .env' 
+        error: 'Invalid API key. Check your OpenRouter API key.' 
       });
     }
     
@@ -142,3 +133,5 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+  
