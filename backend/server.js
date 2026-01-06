@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 // Groq API Configuration (FREE!)
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const API_KEY = process.env.GROQ_API_KEY;
+const API_KEY = process.env.GROQ_API_KEY?.trim();
 
 // CORS configuration
 app.use((req, res, next) => {
