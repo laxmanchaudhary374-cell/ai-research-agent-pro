@@ -1,3 +1,5 @@
+
+  
 // backend/server.js
 const express = require('express');
 const cors = require('cors');
@@ -7,11 +9,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// OpenRouter API endpoint (FREE!)
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const API_KEY = process.env.OPENROUTER_API_KEY;
+// Groq API Configuration (FREE!)
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const API_KEY = process.env.GROQ_API_KEY;
 
-// CORS configuration - MUST come FIRST
+// CORS configuration
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -24,7 +26,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Body parser - MUST come AFTER CORS
+// Body parser
 app.use(express.json({ limit: '50mb' }));
 
 // Health check
@@ -32,7 +34,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
-    api: 'OpenRouter (Free!)'
+    api: 'Groq (100% Free!)'
   });
 });
 
@@ -50,11 +52,11 @@ app.post('/api/chat', async (req, res) => {
 
     if (!API_KEY) {
       return res.status(500).json({ 
-        error: 'API key not configured. Please add OPENROUTER_API_KEY to environment variables' 
+        error: 'API key not configured. Please add GROQ_API_KEY to environment variables' 
       });
     }
 
-    // Prepare messages for OpenRouter
+    // Prepare messages
     const apiMessages = messages.map(m => ({
       role: m.role,
       content: m.content
@@ -66,13 +68,13 @@ app.post('/api/chat', async (req, res) => {
       content: 'You are an advanced AI Research Agent. You help with research, document analysis, code generation, and more. Be helpful, thorough, and professional.'
     });
 
-    console.log('Calling OpenRouter API...');
+    console.log('Calling Groq API...');
 
-    // Call OpenRouter API
+    // Call Groq API
     const response = await axios.post(
-      OPENROUTER_API_URL,
+      GROQ_API_URL,
       {
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'llama-3.3-70b-versatile', // FREE and FAST!
         messages: apiMessages,
         temperature: 0.7,
         max_tokens: 2000
@@ -80,22 +82,20 @@ app.post('/api/chat', async (req, res) => {
       {
         headers: {
           'Authorization': `Bearer ${API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:5173',
-          'X-Title': 'AI Research Agent'
+          'Content-Type': 'application/json'
         }
       }
     );
 
     const assistantMessage = response.data.choices[0].message.content;
 
-    console.log('OpenRouter Response received!');
+    console.log('✅ Groq Response received!');
 
     res.json({
       response: assistantMessage,
       timestamp: new Date().toISOString(),
-      model: 'Gemini 2.0 Flash (Free)',
-      provider: 'OpenRouter'
+      model: 'Llama 3.3 70B (Free)',
+      provider: 'Groq'
     });
 
   } catch (error) {
@@ -104,13 +104,13 @@ app.post('/api/chat', async (req, res) => {
     
     if (error.response?.status === 401) {
       return res.status(401).json({ 
-        error: 'Invalid API key. Check your OpenRouter API key.' 
+        error: 'Invalid Groq API key. Check your key at console.groq.com' 
       });
     }
     
-    if (error.response?.status === 402) {
-      return res.status(402).json({ 
-        error: 'No credits remaining. Please add credits to your OpenRouter account.' 
+    if (error.response?.status === 429) {
+      return res.status(429).json({ 
+        error: 'Rate limit exceeded. Please wait a moment and try again.' 
       });
     }
 
@@ -126,12 +126,11 @@ app.listen(PORT, () => {
 ╔════════════════════════════════════════╗
 ║  🚀 AI Research Agent (FREE Version)  ║
 ║  📡 Server: http://localhost:${PORT}    ║
-║  🤖 Model: Gemini 2.0 Flash (Free)    ║
+║  🤖 Model: Llama 3.3 70B (Groq)       ║
 ║  ✅ Status: Ready!                     ║
+║  💯 Cost: $0 (100% FREE!)             ║
 ╚════════════════════════════════════════╝
   `);
 });
 
 module.exports = app;
-
-  
