@@ -296,9 +296,9 @@ MIT License - feel free to use for learning and portfolios!
 
 **Laxman Chaudhary**
 
-- 🌐 Portfolio: [Coming Soon]
-- 💼 LinkedIn: [Your LinkedIn]
-- 📧 Email: your.email@example.com
+- 🌐 Portfolio: https://ai-research-agent-pro.vercel.app
+- 💼 LinkedIn: www.linkedin.com/in/laxman-c-1b2804169
+- 📧 Email: laxmanchaudhary374@gmail.com
 - 🐙 GitHub: [@laxmanchaudhary374-cell](https://github.com/laxmanchaudhary374-cell)
 
 ---
